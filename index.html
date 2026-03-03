@@ -1,13 +1,132 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English LMS - Hệ thống quản lý lớp học</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar-item:hover { background-color: #3b82f6; color: white; transition: 0.3s; }
+        .active-tab { background-color: #2563eb; color: white; }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+
+    <div id="login-page" class="flex h-screen">
+        <div class="w-1/2 bg-blue-600 flex flex-col justify-center items-center text-white p-12">
+            <h2 class="text-3xl font-bold mb-6"><i class="fas fa-chalkboard-teacher mr-3"></i>Dành cho Giáo viên</h2>
+            <div class="bg-white text-gray-800 p-8 rounded-xl shadow-lg w-full max-w-md">
+                <input type="text" placeholder="Họ và tên" class="w-full border p-2 mb-3 rounded">
+                <input type="email" placeholder="Email (Bắt buộc)" class="w-full border p-2 mb-3 rounded">
+                <input type="text" placeholder="Tên đăng nhập" class="w-full border p-2 mb-3 rounded">
+                <input type="password" placeholder="Mật khẩu" class="w-full border p-2 mb-3 rounded">
+                <button onclick="showDashboard('teacher')" class="w-full bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700">ĐĂNG KÝ GIÁO VIÊN</button>
+            </div>
+        </div>
+        <div class="w-1/2 bg-white flex flex-col justify-center items-center p-12 text-gray-800 border-l">
+            <h2 class="text-3xl font-bold mb-6 text-blue-600"><i class="fas fa-user-graduate mr-3"></i>Học sinh & Phụ huynh</h2>
+            <div class="bg-gray-100 p-8 rounded-xl shadow-lg w-full max-w-md border border-gray-200">
+                <input type="text" placeholder="Họ và tên" class="w-full border p-2 mb-3 rounded">
+                <input type="email" placeholder="Email (Không bắt buộc)" class="w-full border p-2 mb-3 rounded">
+                <input type="text" placeholder="Tên đăng nhập" class="w-full border p-2 mb-3 rounded">
+                <input type="password" placeholder="Mật khẩu" class="w-full border p-2 mb-3 rounded">
+                <button onclick="showDashboard('student')" class="w-full bg-green-500 text-white py-2 rounded font-bold hover:bg-green-600">ĐĂNG KÝ HỌC SINH</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-dashboard" class="hidden flex h-screen">
+        <div class="w-64 bg-white border-r flex flex-col shadow-sm">
+            <div class="p-6 text-2xl font-bold text-blue-600 border-b">English LMS</div>
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="#" class="sidebar-item active-tab flex items-center p-3 rounded-lg"><i class="fas fa-home w-8"></i> Trang chủ</a>
+                <a href="#" class="sidebar-item flex items-center p-3 rounded-lg"><i class="fas fa-users w-8"></i> Lớp học</a>
+                <a href="#" class="sidebar-item flex items-center p-3 rounded-lg"><i class="fas fa-tasks w-8"></i> Bài tập</a>
+                <a href="#" class="sidebar-item flex items-center p-3 rounded-lg"><i class="fas fa-book w-8"></i> Tài liệu</a>
+                <a href="#" class="sidebar-item flex items-center p-3 rounded-lg"><i class="fas fa-star w-8"></i> Điểm số</a>
+                <a href="#" class="sidebar-item flex items-center p-3 rounded-lg"><i class="fas fa-bell w-8"></i> Thông báo</a>
+            </nav>
+            <button onclick="location.reload()" class="p-4 border-t text-red-500 hover:bg-red-50 text-left"><i class="fas fa-sign-out-alt mr-2"></i> Đăng xuất</button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-8">
+            <div class="flex justify-between items-center mb-8">
+                <h1 id="welcome-text" class="text-2xl font-bold text-gray-800">Chào mừng trở lại!</h1>
+                <div class="flex items-center space-x-4">
+                    <span id="role-badge" class="px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-sm font-bold uppercase">Giáo viên</span>
+                </div>
+            </div>
+
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8 rounded shadow-sm">
+                <p class="text-yellow-700 font-bold">Thông báo: <span class="font-normal">Lịch thi giữa kỳ dự kiến vào tuần sau. Chúc các em ôn tập tốt!</span></p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border col-span-2">
+                    <h3 class="font-bold mb-4 text-gray-600" id="chart-title">Thống kê điểm số lớp học</h3>
+                    <canvas id="myChart" height="150"></canvas>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border">
+                    <h3 class="font-bold mb-4 text-gray-600">Tiến độ tuần này</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1"><span>Hoàn thành bài tập</span><span id="stat-percent">85%</span></div>
+                            <div class="w-full bg-gray-200 h-2 rounded-full"><div id="progress-bar" class="bg-blue-600 h-2 rounded-full" style="width: 85%"></div></div>
+                        </div>
+                        <div class="p-4 bg-blue-50 rounded-lg">
+                            <p class="text-xs text-blue-600 uppercase font-bold">Hôm nay có</p>
+                            <p class="text-xl font-bold">12 Bài nộp mới</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showDashboard(role) {
+            document.getElementById('login-page').classList.add('hidden');
+            document.getElementById('main-dashboard').classList.remove('hidden');
+            
+            const badge = document.getElementById('role-badge');
+            const welcome = document.getElementById('welcome-text');
+            const chartTitle = document.getElementById('chart-title');
+            const statText = document.getElementById('stat-percent');
+            const progressBar = document.getElementById('progress-bar');
+
+            if(role === 'teacher') {
+                badge.innerText = 'Giáo viên'; badge.classList.replace('bg-green-100','bg-blue-100');
+                welcome.innerText = 'Chào mừng Thầy/Cô trở lại!';
+                chartTitle.innerText = 'Thống kê hiệu suất từng lớp';
+                initChart([75, 82, 65, 90], ['Lớp 6A', 'Lớp 7B', 'Lớp 8C', 'Lớp 9D']);
+            } else {
+                badge.innerText = 'Học sinh'; badge.classList.add('bg-green-100', 'text-green-600');
+                welcome.innerText = 'Chào mừng em học sinh!';
+                chartTitle.innerText = 'Kết quả học tập cá nhân (4 Kỹ năng)';
+                statText.innerText = '60%';
+                progressBar.style.width = '60%';
+                initChart([8, 7, 9, 6], ['Nghe', 'Nói', 'Đọc', 'Viết']);
+            }
+        }
+
+        function initChart(data, labels) {
+            const ctx = document.getElementById('myChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Điểm trung bình',
+                        data: data,
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 5
+                    }]
+                }
+            });
+        }
+    </script>
+</body>
 </html>
 
